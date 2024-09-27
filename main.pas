@@ -37,7 +37,19 @@ begin
     begin
         while SDL_PollEvent(@event) <> 0 do
         begin
+            
+            SDL_RenderClear(sdlRenderer);
+            SDL_RenderCopy(sdlRenderer,background,nil, @destRectBackground);
+            SDL_RenderCopy(sdlrenderer,mario,nil,@destRectMario);
 
+            if (destRectMario.x = 50) and (destRectMario.y > 375)  then
+                destRectMario.x := destRectMario.x -5;
+            IF destRectMario.y < 400 then
+            begin
+            destRectMario.y:=destRectMario.y +2;
+            end;
+            
+            
             if event.type_ = SDL_QUITEV then
             quit := true;
 
@@ -46,11 +58,15 @@ begin
                 case event.key.keysym.sym of 
                     SDLK_ESCAPE:quit:=True;
                     SDLk_right:destRectMario.x:= destRectMario.x +5;
+                    SDLk_space:destRectMario.y:= destRectMario.y -50;
                     SDLk_left:destRectMario.x:= destRectMario.x -5;
                 end;
             end;
 
-
+            if (destRectMario.x = 50) and (destRectMario.y > 375)  then
+                destRectMario.x := destRectMario.x -5;
+            IF destRectMario.y < 400 then
+            destRectMario.y:=destRectMario.y +2;
             SDL_RenderClear(sdlRenderer);
             SDL_RenderCopy(sdlRenderer,background,nil, @destRectBackground);
             SDL_RenderCopy(sdlrenderer,mario,nil,@destRectMario);
