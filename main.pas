@@ -2,77 +2,149 @@ program main;
 
 uses SDL2, SDL2_image;
 
-var sdlWindow1:PSDL_Window;
+
+
+type Tbackground = 
+    record
+    destRect:TSDL_Rect;
+    surface:PSDL_Surface;
+    texture:PSDL_Texture;
+    end;
+type Tplayer = 
+    record
+    destRect:TSDL_Rect;
+    life:integer;
+    surface:PSDL_Surface;
+    texture:PSDL_Texture;
+    end;
+
+var 
+    sdlWindow1:PSDL_Window;
     sdlRenderer:PSDL_Renderer;
-    surfaceMario,surfaceBackground:PSDL_Surface;
-    mario,background:PSDL_Texture;
-    destRectMario,destRectBackground:TSDL_Rect;
+    player:Tplayer;
+    background:Tbackground;
+    keyState:PUInt8;
+    one:integer;
+    left,right,up:boolean;
     event:TSDL_Event;
+    n:integer;
     quit:boolean;
+
+
+
+procedure move(var player:Tplayer;var background:Tbackground;up,right,left:boolean);
+begin
+    if (up = True) and (player.destRect.y=400) then
+    begin
+        player.destRect.y:= player.destRect.y -100;
+        
+    end
+
+    else if (right = True) and (up = False) then
+    begin
+        if player.destRect.y=400 then
+            begin
+                background.destRect.x:= background.destRect.x -10;
+            end
+        else
+            background.destRect.x:= background.destRect.x -2;
+    end
+
+    else if (left = True) and (up = False) then
+        begin
+            if player.destRect.y =400 then
+                begin
+                background.destRect.x:= background.destRect.x +10;
+                end
+            else
+            background.destRect.x:= background.destRect.x +2;
+            
+        end;
+    
+end;
+
+
+
 begin
     if SDL_Init(SDL_INIT_VIDEO) < 0 then 
         Halt;
 
     sdlWindow1 := SDL_CreateWindow('window1',50,50,800,500, SDL_WINDOW_SHOWN);
-
     sdlRenderer := SDL_CreateRenderer(sdlWindow1, -1, 0);
-    surfaceMario := IMG_Load('./assets/mario.png');
-    surfaceBackground:= IMG_Load('./assets/background.png');
-    mario:= SDL_CreateTextureFromSurface(sdlRenderer,surfaceMario);
-    background:= SDL_CreateTextureFromSurface(sdlRenderer,surfaceBackground);
+    
+    player.surface := IMG_Load('./assets/mario.png');
+    background.surface:= IMG_Load('./assets/background.png');
+    player.texture:= SDL_CreateTextureFromSurface(sdlRenderer,player.surface);
+    background.texture:= SDL_CreateTextureFromSurface(sdlRenderer,background.surface);
     //Mario
-    destRectMario.x:=10;
-    destRectMario.y:=400;
-    destRectMario.w:=50;
-    destRectMario.h:=50;
-
+    player.destRect.x:=400;
+    player.destRect.y:=400;
+    player.destRect.w:=50;
+    player.destRect.h:=50;
+    
     //Background
-    destRectBackground.x:=0;
-    destRectBackground.y:=-45;
-    destRectBackground.w:=900;
-    destRectBackground.h:=531;
+    background.destRect.x:=0;
+    background.destRect.y:=-45;
+    background.destRect.w:=900;
+    background.destRect.h:=531;
 
     quit := false;
+    n:=0;
     while not quit do
     begin
+    //gravitée
+        if (background.destRect.x = -100) and (player.destRect.y > 375)  then
+            background.destRect.x := background.destRect.x +5;
+            if player.destRect.y < 400 then
+            begin
+            player.destRect.y:=player.destRect.y +1;
+            move(player,background,up,right,left);
+            sdl_delay(4);
+            end;
+
+        
+        //evenement
         while SDL_PollEvent(@event) <> 0 do
         begin
             
-            SDL_RenderClear(sdlRenderer);
-            SDL_RenderCopy(sdlRenderer,background,nil, @destRectBackground);
-            SDL_RenderCopy(sdlrenderer,mario,nil,@destRectMario);
-
-            if (destRectMario.x = 50) and (destRectMario.y > 375)  then
-                destRectMario.x := destRectMario.x -5;
-            IF destRectMario.y < 400 then
-            begin
-            destRectMario.y:=destRectMario.y +2;
+            //evenement touche appuyé
+            if event.type_ = SDL_KEYDOWN then
+                begin
+                case event.key.keysym.sym of
+                    SDLK_LEFT: left:=True;
+                    SDLK_RIGHT: right:=True;
+                    SDLK_SPACE: up:=True;
+                end;
             end;
+            //evenement touche relevé
             
-            
+            //fermeture
             if event.type_ = SDL_QUITEV then
             quit := true;
 
-            if event.type_ = SDL_KEYDOWN then
-            begin
-                case event.key.keysym.sym of 
-                    SDLK_ESCAPE:quit:=True;
-                    SDLk_right:destRectMario.x:= destRectMario.x +5;
-                    SDLk_space:destRectMario.y:= destRectMario.y -50;
-                    SDLk_left:destRectMario.x:= destRectMario.x -5;
+            move(player,background,up,right,left);  
+
+            //rendement
+            SDL_RenderClear(sdlRenderer);
+            SDL_RenderCopy(sdlRenderer,background.texture,nil, @background.destRect);
+            SDL_RenderCopy(sdlrenderer,player.texture,nil,@player.destRect);
+            if event.type_ = SDL_KEYUP then
+                begin
+                case event.key.keysym.sym of
+                    SDLK_LEFT: left:=false;
+                    SDLK_RIGHT: right:=false;
+                    SDLK_SPACE: up:=false;
                 end;
             end;
-
-            if (destRectMario.x = 50) and (destRectMario.y > 375)  then
-                destRectMario.x := destRectMario.x -5;
-            IF destRectMario.y < 400 then
-            destRectMario.y:=destRectMario.y +2;
-            SDL_RenderClear(sdlRenderer);
-            SDL_RenderCopy(sdlRenderer,background,nil, @destRectBackground);
-            SDL_RenderCopy(sdlrenderer,mario,nil,@destRectMario);
-
-            SDL_RenderPresent(sdlRenderer);
+    
         end;
+
+        SDL_RenderClear(sdlRenderer);
+        SDL_RenderCopy(sdlRenderer,background.texture,nil, @background.destRect);
+        SDL_RenderCopy(sdlrenderer,player.texture,nil,@player.destRect);
+        SDL_RenderPresent(sdlRenderer);
+
+        
     end;
 
     SDL_DestroyRenderer(sdlrenderer);
