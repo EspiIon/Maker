@@ -2,7 +2,7 @@ program main;
 
 uses SDL2, SDL2_image;
 
-const absoluteTop = 250;
+
 const taille = 3;
 
 type Tbackground =
@@ -19,7 +19,7 @@ type Tbloc =
     surface:PSDL_Surface;
     texture:PSDL_Texture;
     id:integer;
-    bloc:boolean;
+    bloc,collision:boolean;
     end;
 
 type TabBloc = array of array of tbloc;
@@ -33,7 +33,7 @@ type Tplayer =
     end;
 
 var
-    FloorLevel,top,i,k,n:integer;
+    FloorLevel,top,i,k,n,absoluteTop:integer;
     counter:real;
     sdlWindow1:PSDL_Window;
     sdlRenderer:PSDL_Renderer;
@@ -44,28 +44,134 @@ var
     event:TSDL_Event;
     quit:boolean;
 
-procedure Generation(var niveau:TabBloc;player:Tplayer;background:TabBackground;taille:integer);
-var r:integer;
+    
+procedure defBackground(var background:TabBackground;sdlRenderer:PSDL_Renderer;taille:integer);
 begin
-    randomize();
-    setlength(niveau,taille,6);
+for i:=1 to taille do
+        begin
+        background[i].surface:= IMG_Load('./assets/background.png');
+        background[i].texture:= SDL_CreateTextureFromSurface(sdlRenderer,background[i].surface);
+        background[i].destRect.x:=0+900*(i-1);
+        background[i].destRect.y:=0;
+        background[i].destRect.w:=900;
+        background[i].destRect.h:=500;
+        end;
+end;
+procedure keyinteraction(var up, down, right, left:boolean);
+var event:TSDL_Event;
+begin
+while SDL_PollEvent(@event) <> 0 do
+    begin
+        if event.type_ = SDL_KEYDOWN then
+            begin
+                if event.key.keysym.sym = SDLK_LEFT then
+                    begin
+                        left:=True;
+                        right:=False;   
+                    end;
+                if event.key.keysym.sym = SDLK_RIGHT then
+                    begin
+                    right:=True;
+                    left:=False;
+                    end;
+                if (event.key.keysym.sym = SDLK_SPACE) and not down then
+                    begin
+                        if not up then
+                            absoluteTop:= player.destRect.y -150;
+                        up:=True;
+                    end;
+            end;
+
+         if event.type_ = SDL_QUITEV then
+            quit := true;
+
+            if event.type_ = SDL_KEYUP then
+                begin
+                    if event.key.keysym.sym = SDLK_SPACE then
+                        begin
+                            top:= player.destRect.y -50;
+                        end;
+                if event.key.keysym.sym = SDLK_LEFT then
+                    begin
+                        left:=false;
+                        counter:=0;
+                    end;
+                if event.key.keysym.sym = SDLK_RIGHT then
+                    begin
+                        right:=false;
+                        counter:=0;
+                    end;
+                end;
+    end;
+end;
+procedure defplayer(var player:Tplayer;var sdlRenderer:PSDL_Renderer);
+begin
+    player.surface := IMG_Load('./assets/mario.png');
+    player.texture:= SDL_CreateTextureFromSurface(sdlRenderer,player.surface);
+    player.destRect.x:=20;
+    player.destRect.y:=400;
+    player.destRect.w:=50;
+    player.destRect.h:=50;
+end;
+
+procedure highness(var player:Tplayer;up,down:boolean);
+begin
+ if (not down) and (not up) then
+        begin
+        if ((player.destRect.y-400) mod 40) <> 0 then
+        begin
+            player.destRect.y := 400+40*(round((player.destRect.y-400)/40));
+        end;
+        end;
+end;
+
+procedure Generation(var niveau:TabBloc;player:Tplayer;background:TabBackground;taille:integer);
+// var r:integer;
+// begin
+//     randomize();
+//     setlength(niveau,taille,6);
+//     for i:= 0 to taille-1 do
+//         begin
+//         for k:=0 to 5 do   
+//             begin
+//                 r:=random(2+k);
+//                 if k=r then
+//                 begin
+//                     niveau[i][k].bloc:=True;
+//                     niveau[i][k].surface:= IMG_Load('./assets/terre.jpg');
+//                     niveau[i][k].texture:= SDL_CreateTextureFromSurface(sdlRenderer,niveau[i][k].surface);
+//                     niveau[i][k].destRect.x:=0+40*(i);
+//                     niveau[i][k].destRect.y:=450-40*k;
+//                     niveau[i][k].destRect.w:=40;
+//                     niveau[i][k].destRect.h:=40;
+//                 end;
+//             end;
+//         end;
+begin
+setlength(niveau,taille,6);
     for i:= 0 to taille-1 do
         begin
-        for k:=0 to 5 do
-            begin
-                r:=random(2+k);
-                writeln(r);
-                if r=1 then
-                begin
-                    niveau[i][k].bloc:=True;
-                    niveau[i][k].surface:= IMG_Load('./assets/terre.jpg');
-                    niveau[i][k].texture:= SDL_CreateTextureFromSurface(sdlRenderer,niveau[i][k].surface);
-                    niveau[i][k].destRect.x:=0+40*(i);
-                    niveau[i][k].destRect.y:=450 -40*k;
-                    niveau[i][k].destRect.w:=40;
-                    niveau[i][k].destRect.h:=40;
-                end;
-            end;
+        k:=0;
+            niveau[i][k].bloc:=True;
+            niveau[i][k].surface:= IMG_Load('./assets/terre.jpg');
+            niveau[i][k].texture:= SDL_CreateTextureFromSurface(sdlRenderer,niveau[i][k].surface);
+            niveau[i][k].destRect.x:=0+40*(i);
+            niveau[i][k].destRect.y:=450-40*k;
+            niveau[i][k].destRect.w:=40;
+            niveau[i][k].destRect.h:=40;
+            for k:=1 to 5 do 
+                    begin
+                    if ((i>7) and (k<2)) or ((i>7)and (i<22) and (k>4))  then
+                    begin
+                        niveau[i][k].bloc:=True;
+                        niveau[i][k].surface:= IMG_Load('./assets/terre.jpg');
+                        niveau[i][k].texture:= SDL_CreateTextureFromSurface(sdlRenderer,niveau[i][k].surface);
+                        niveau[i][k].destRect.x:=0+40*(i);
+                        niveau[i][k].destRect.y:=450-40*k;
+                        niveau[i][k].destRect.w:=40;
+                        niveau[i][k].destRect.h:=40;
+                        end;
+                    end;
         end;
 end;
 procedure affichage(player:Tplayer;background:TabBackground;niveau:TabBloc;taille:integer;sdlrenderer:PSDL_Renderer);
@@ -84,30 +190,51 @@ begin
         SDL_RenderCopy(sdlrenderer,player.texture,nil,@player.destRect);
         SDL_RenderPresent(sdlRenderer);
 end;
-procedure Hitbox(var player:Tplayer;var background:TabBackground;niveau:TabBloc;taille:integer);
+function Hitbox(player:Tplayer;background:TabBackground;var niveau:TabBloc;taille:integer):boolean;
 begin
-    for i:=0 to taille do
+    Hitbox:=false;
+    for i:=0 to taille-1 do
     begin
         for k:=0 to 5 do
         begin
-            for n:=0 to 15 do
+            if niveau[i][k].bloc = True then
             begin
-                if niveau[i][k].destRect.x+i = player.destRect.x+50 then
-                begin
-                    player.destRect.x:= player.destRect.x -40;
-                end;
+                if SDL_HasIntersection(@player.destRect,@niveau[i][k].destRect) then
+                    begin
+                        Hitbox:=True;
+                    end
+                    else
+                        Hitbox:=Hitbox;
             end;
         end;
     end;
 end;
-
+function HitboxExtended(player:Tplayer;background:TabBackground;var niveau:TabBloc;taille:integer):boolean;
+begin
+    HitboxExtended:=false;
+    player.destRect.h:=player.destRect.h +1;
+    for i:=0 to taille-1 do
+    begin
+        for k:=0 to 5 do
+        begin
+            if niveau[i][k].bloc = True then
+            begin
+                if SDL_HasIntersection(@player.destRect,@niveau[i][k].destRect) then
+                    begin
+                        HitboxExtended:=True;
+                    end
+                    else
+                        HitboxExtended:=HitboxExtended;
+            end;
+        end;
+    end;
+end;
 procedure GoodPosition(var player:Tplayer;var background:TabBackground);
 var i:integer;
     begin
     if player.destRect.x < 0 then
         player.destRect.x:=0;
-    if player.destRect.x > 400 then
-        player.destRect.x:=400;
+    
 
     for i:=1 to taille do
         begin
@@ -122,6 +249,8 @@ var i:integer;
         end;
     end;
 
+
+
 procedure move(var player:Tplayer;var background:TabBackground;up,right,left:boolean;top:integer;var counter:real);
 var speed,i:integer;
 begin
@@ -131,147 +260,102 @@ begin
         speed:=round((player.destRect.y - top)/30)+3;
         player.destRect.y:= player.destRect.y -speed;
     end;
-    if (right = True)then
+    if (right = True) then
         begin
-        if player.destRect.x=400 then
-        begin
-        for i:=1 to taille do
-            background[i].destRect.x:= background[i].destRect.x + round(counter);
-        end
-        else
-            player.destRect.x:=player.destRect.x-round(counter);
-        if counter > -7 then
-            counter:= counter-0.2;
+            if player.destRect.x=600 then
+            begin
+                for i:=1 to taille do
+                    background[i].destRect.x:= background[i].destRect.x + round(counter);
+            end
+            else
+            begin
+                if Hitbox(player,background,niveau,50) then
+                begin
+                    if counter > 0 then
+                    player.destRect.x:=player.destRect.x-1;
+                end
+                else
+                begin
+                    player.destRect.x:=player.destRect.x+round(counter);
+                    if counter < 5 then
+                        counter:= counter+0.4;
+                end;
+            end;
         end;
-    if (left = True)then
+    if (left = True) then
     begin
+    
         if player.destRect.x = 0 then
         begin
         for i:=1 to taille do
             background[i].destRect.x:= background[i].destRect.x + round(counter);
         end
         else
-            player.destRect.x:=player.destRect.x-round(counter);
-    if counter < 7 then
-        counter:= counter+0.2;
+            begin
+            if Hitbox(player,background,niveau,50) then
+                begin
+                if counter < 0 then
+                player.destRect.x:=player.destRect.x+1;
+                end
+                else
+                begin  
+                    player.destRect.x:=player.destRect.x+round(counter);
+                    if counter > -5 then
+                        counter:= counter-0.4;
+                end;
+            end;
     end;
+    
+    
 end;
 
 procedure Gravity(var player:Tplayer;var up,down:boolean;level:integer;var top:integer);
 var speed:integer;
 begin
-    if (player.destRect.y <= top) or (player.destRect.y < absoluteTop)  then
+    if (player.destRect.y <= top) or (player.destRect.y < absoluteTop) or (not(HitboxExtended(player,background,niveau,50)) and (not up)) then
     begin
         down:=True;
         up:=False;
+        top:=player.destRect.y
     end;
-    if (player.destRect.y >= level) then
+    if (player.destRect.y >= level) or (Hitbox(player,background,niveau,50)) then
         begin
         down:=False;
         top:=absoluteTop;
-        if player.destRect.y <> level then
-            player.destRect.y := level;
+        
         end;
     if down then
         begin
-        speed:=round((player.destRect.y -top)/30)+2;
+        speed:=round((player.destRect.y-top)/30)+3;
         player.destRect.y:= player.destRect.y + speed;
         end;
 end;
 
-
-
 begin
     FloorLevel:=400;
-    top:=absoluteTop;
-    if SDL_Init(SDL_INIT_VIDEO) < 0 then
-        Halt;
-
     sdlWindow1 := SDL_CreateWindow('window1',50,50,1280,720, SDL_WINDOW_SHOWN);
     sdlRenderer := SDL_CreateRenderer(sdlWindow1, -1, 0);
-    
-    player.surface := IMG_Load('./assets/mario.png');
+    defBackground(background,sdlRenderer,3);
+    defplayer(player,sdlRenderer);
     Generation(niveau,player,background,50);
-    for i:=1 to taille do
-        begin
-        background[i].surface:= IMG_Load('./assets/background.png');
-        background[i].texture:= SDL_CreateTextureFromSurface(sdlRenderer,background[i].surface);
-        background[i].destRect.x:=0+900*(i-1);
-        background[i].destRect.y:=0;
-        background[i].destRect.w:=900;
-        background[i].destRect.h:=500;
-        end;
-    player.texture:= SDL_CreateTextureFromSurface(sdlRenderer,player.surface);
-
-
-    //Mario
-    player.destRect.x:=20;
-    player.destRect.y:=400;
-    player.destRect.w:=50;
-    player.destRect.h:=50;
 
     quit := false;
+
+    //boucle principale
     while not quit do
     begin
-
         if player.destRect.y < absoluteTop then
             up:=False;
-        //evenement
+        highness(player,up,down);
         move(player,background,up,right,left,top,counter);
-        Hitbox(player,background,niveau,taille);
         Gravity(player,up,down,FloorLevel,top);
         GoodPosition(player,background);
         affichage(player,background,niveau,50,sdlrenderer);
+        keyinteraction(up, down, right, left);
         sdl_delay(10);
-        while SDL_PollEvent(@event) <> 0 do
-        begin
-
-            //evenement touche appuyé
-            if event.type_ = SDL_KEYDOWN then
-                begin
-                if event.key.keysym.sym = SDLK_LEFT then
-                    begin
-                    left:=True;
-                    right:=False;   
-                    end;
-                if event.key.keysym.sym = SDLK_RIGHT then
-                    begin
-                    right:=True;
-                    left:=False;
-                    end;
-                if (event.key.keysym.sym = SDLK_SPACE) and (player.destRect.y = 400) then
-                    up:=True;
-            end;
-            //evenement touche relevé
-
-            //fermeture
-            if event.type_ = SDL_QUITEV then
-            quit := true;
-
-            if event.type_ = SDL_KEYUP then
-                begin
-                if event.key.keysym.sym = SDLK_SPACE then
-                    begin
-                    top:= player.destRect.y -50;
-                    end;
-                if event.key.keysym.sym = SDLK_LEFT then
-                    begin
-                    left:=false;
-                    counter :=0;
-                    end;
-                if event.key.keysym.sym = SDLK_RIGHT then
-                    begin
-                    right:=false;
-                    counter :=0;
-                    end;
-            end;
-
-        end;
 
     end;
-
     SDL_DestroyRenderer(sdlrenderer);
     SDL_DestroyWindow(sdlWindow1);
     SDL_Quit;
-
 end.
