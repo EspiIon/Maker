@@ -34,17 +34,17 @@ type Tplayer =
 
 var
     FloorLevel,top,i,k,n,absoluteTop:integer;
-    counter:real;
+    speedx,speedy:integer;
     sdlWindow1:PSDL_Window;
     sdlRenderer:PSDL_Renderer;
     player:Tplayer;
     background:TabBackground;
-    left,right,up,down:boolean;
+    left,right,up,down,touchfloor,touchbottom:boolean;
     niveau:TabBloc;
     event:TSDL_Event;
     quit:boolean;
 
-    
+
 procedure defBackground(var background:TabBackground;sdlRenderer:PSDL_Renderer;taille:integer);
 begin
 for i:=1 to taille do
@@ -94,12 +94,12 @@ while SDL_PollEvent(@event) <> 0 do
                 if event.key.keysym.sym = SDLK_LEFT then
                     begin
                         left:=false;
-                        counter:=0;
+                        speedx:=0;
                     end;
                 if event.key.keysym.sym = SDLK_RIGHT then
                     begin
                         right:=false;
-                        counter:=0;
+                        speedx:=0;
                     end;
                 end;
     end;
@@ -114,10 +114,11 @@ begin
     player.destRect.h:=50;
 end;
 
-procedure highness(var player:Tplayer;up,down:boolean);
+procedure highness(var player:Tplayer;up,down,touchfloor:boolean);
 begin
- if (not down) and (not up) then
+ if (not down) and (not up) and touchfloor then
         begin
+        writeln('aaaa');
         if ((player.destRect.y-400) mod 40) <> 0 then
         begin
             player.destRect.y := 400+40*(round((player.destRect.y-400)/40));
@@ -190,21 +191,56 @@ begin
         SDL_RenderCopy(sdlrenderer,player.texture,nil,@player.destRect);
         SDL_RenderPresent(sdlRenderer);
 end;
-function Hitbox(player:Tplayer;background:TabBackground;var niveau:TabBloc;taille:integer):boolean;
+procedure Hitbox(player:Tplayer;background:TabBackground;var niveau:TabBloc;taille:integer;var speedx,speedy:integer;var up,down,touchfloor,touchbottom:boolean);
+var leftbloc,rightbloc,bottombloc,topbloc:TSDL_Rect;
 begin
-    Hitbox:=false;
+    touchfloor:=False;
+    touchbottom:=False;
     for i:=0 to taille-1 do
     begin
         for k:=0 to 5 do
         begin
             if niveau[i][k].bloc = True then
             begin
-                if SDL_HasIntersection(@player.destRect,@niveau[i][k].destRect) then
+                leftbloc.y:=niveau[i][k].destRect.y;
+                leftbloc.x:=niveau[i][k].destRect.x;
+                leftbloc.h:=niveau[i][k].destRect.h;
+                leftbloc.w:=2;
+
+                rightbloc.y:=niveau[i][k].destRect.y;
+                rightbloc.x:=niveau[i][k].destRect.x+niveau[i][k].destRect.w;
+                rightbloc.h:=niveau[i][k].destRect.h;
+                rightbloc.w:=2;
+
+                bottombloc.y:=niveau[i][k].destRect.y+niveau[i][k].destRect.h+5;
+                bottombloc.x:=niveau[i][k].destRect.x;
+                bottombloc.h:=1;
+                bottombloc.w:=niveau[i][k].destRect.w;
+
+                topbloc.y:=niveau[i][k].destRect.y-1;
+                topbloc.x:=niveau[i][k].destRect.x;
+                topbloc.h:=1;
+                topbloc.w:=niveau[i][k].destRect.w;
+
+                if SDL_HasIntersection(@player.destRect,@bottombloc) then
                     begin
-                        Hitbox:=True;
+                        touchbottom:=True;
+                    end;
+                if SDL_HasIntersection(@player.destRect,@topbloc) then
+                    begin
+                    touchfloor:=True;
+                    down:=false;
                     end
-                    else
-                        Hitbox:=Hitbox;
+                else
+                    touchfloor:=touchfloor;
+                if SDL_HasIntersection(@player.destRect,@leftbloc) then
+                    begin
+                        speedx:=-2;
+                    end
+                else if SDL_HasIntersection(@player.destRect,@rightbloc) then
+                    begin
+                        speedx:=2;
+                    end;
             end;
         end;
     end;
@@ -251,83 +287,47 @@ var i:integer;
 
 
 
-procedure move(var player:Tplayer;var background:TabBackground;up,right,left:boolean;top:integer;var counter:real);
-var speed,i:integer;
-begin
-    
+procedure move(var player:Tplayer;var background:TabBackground;up,right,left:boolean;top:integer;var speedx:integer);
+var speedy,i:integer;
+begin 
     if (up = True)then
     begin
-        speed:=round((player.destRect.y - top)/30)+3;
-        player.destRect.y:= player.destRect.y -speed;
+        speedy:=round((player.destRect.y - top)/30)+3;
+        player.destRect.y:= player.destRect.y -speedy;
     end;
     if (right = True) then
         begin
-            if player.destRect.x=600 then
-            begin
-                for i:=1 to taille do
-                    background[i].destRect.x:= background[i].destRect.x + round(counter);
-            end
-            else
-            begin
-                if Hitbox(player,background,niveau,50) then
-                begin
-                    if counter > 0 then
-                    player.destRect.x:=player.destRect.x-1;
-                end
-                else
-                begin
-                    player.destRect.x:=player.destRect.x+round(counter);
-                    if counter < 5 then
-                        counter:= counter+0.4;
-                end;
-            end;
-        end;
-    if (left = True) then
-    begin
-    
-        if player.destRect.x = 0 then
-        begin
-        for i:=1 to taille do
-            background[i].destRect.x:= background[i].destRect.x + round(counter);
+         if speedx < 5 then
+            speedx:= speedx+1;
         end
-        else
-            begin
-            if Hitbox(player,background,niveau,50) then
-                begin
-                if counter < 0 then
-                player.destRect.x:=player.destRect.x+1;
-                end
-                else
-                begin  
-                    player.destRect.x:=player.destRect.x+round(counter);
-                    if counter > -5 then
-                        counter:= counter-0.4;
-                end;
-            end;
-    end;
-    
-    
+    else if (left = True)  then
+    begin
+        if speedx > -5 then
+            speedx:= speedx-1;
+    end
+    else
+        speedx:=0;
+player.destRect.x := player.destRect.x+(speedx);
+
 end;
 
-procedure Gravity(var player:Tplayer;var up,down:boolean;level:integer;var top:integer);
-var speed:integer;
+procedure Gravity(var player:Tplayer;var up,down,touchbottom:boolean;level:integer;var top,speedy:integer);
 begin
-    if (player.destRect.y <= top) or (player.destRect.y < absoluteTop) or (not(HitboxExtended(player,background,niveau,50)) and (not up)) then
+    if (player.destRect.y <= top) or (player.destRect.y < absoluteTop) or touchbottom or ((not touchfloor) and (not up))  then
     begin
         down:=True;
         up:=False;
-        top:=player.destRect.y
+        top:=player.destRect.y;
     end;
-    if (player.destRect.y >= level) or (Hitbox(player,background,niveau,50)) then
+    if touchfloor then
         begin
-        down:=False;
-        top:=absoluteTop;
-        
+            down:=False;
+            top:=absoluteTop;
         end;
     if down then
         begin
-        speed:=round((player.destRect.y-top)/30)+3;
-        player.destRect.y:= player.destRect.y + speed;
+        speedy:=round((player.destRect.y-top)/30)+3;
+        player.destRect.y:= player.destRect.y + speedy;
         end;
 end;
 
@@ -338,7 +338,6 @@ begin
     defBackground(background,sdlRenderer,3);
     defplayer(player,sdlRenderer);
     Generation(niveau,player,background,50);
-
     quit := false;
 
     //boucle principale
@@ -346,12 +345,13 @@ begin
     begin
         if player.destRect.y < absoluteTop then
             up:=False;
-        highness(player,up,down);
-        move(player,background,up,right,left,top,counter);
-        Gravity(player,up,down,FloorLevel,top);
+        highness(player,up,down,touchfloor);
+        move(player,background,up,right,left,top,speedx);
+        Gravity(player,up,down,touchbottom,FloorLevel,top,speedy);
         GoodPosition(player,background);
         affichage(player,background,niveau,50,sdlrenderer);
         keyinteraction(up, down, right, left);
+        Hitbox(player,background, niveau,50,speedx,speedy,up,down,touchfloor,touchbottom);
         sdl_delay(10);
 
     end;
