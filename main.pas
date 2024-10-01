@@ -33,7 +33,7 @@ type Tplayer =
     end;
 
 var
-    FloorLevel,top,i,k,n,absoluteTop:integer;
+    FloorLevel,top,absoluteTop:integer;
     speedx,speedy:integer;
     sdlWindow1:PSDL_Window;
     sdlRenderer:PSDL_Renderer;
@@ -41,11 +41,11 @@ var
     background:TabBackground;
     left,right,up,down,touchfloor,touchbottom:boolean;
     niveau:TabBloc;
-    event:TSDL_Event;
     quit:boolean;
 
 
 procedure defBackground(var background:TabBackground;sdlRenderer:PSDL_Renderer;taille:integer);
+var i:integer;
 begin
 for i:=1 to taille do
         begin
@@ -118,7 +118,6 @@ procedure highness(var player:Tplayer;up,down,touchfloor:boolean);
 begin
  if (not down) and (not up) and touchfloor then
         begin
-        writeln('aaaa');
         if ((player.destRect.y-400) mod 40) <> 0 then
         begin
             player.destRect.y := 400+40*(round((player.destRect.y-400)/40));
@@ -127,6 +126,7 @@ begin
 end;
 
 procedure Generation(var niveau:TabBloc;player:Tplayer;background:TabBackground;taille:integer);
+var i,k:integer;
 // var r:integer;
 // begin
 //     randomize();
@@ -176,6 +176,7 @@ setlength(niveau,taille,6);
         end;
 end;
 procedure affichage(player:Tplayer;background:TabBackground;niveau:TabBloc;taille:integer;sdlrenderer:PSDL_Renderer);
+var i,k:integer;
 begin
         SDL_RenderClear(sdlRenderer);
         for i:=1 to 3 do
@@ -193,6 +194,7 @@ begin
 end;
 procedure Hitbox(player:Tplayer;background:TabBackground;var niveau:TabBloc;taille:integer;var speedx,speedy:integer;var up,down,touchfloor,touchbottom:boolean);
 var leftbloc,rightbloc,bottombloc,topbloc:TSDL_Rect;
+	i,k:integer;
 begin
     touchfloor:=False;
     touchbottom:=False;
@@ -246,6 +248,8 @@ begin
     end;
 end;
 function HitboxExtended(player:Tplayer;background:TabBackground;var niveau:TabBloc;taille:integer):boolean;
+var i,k:integer;
+
 begin
     HitboxExtended:=false;
     player.destRect.h:=player.destRect.h +1;
@@ -288,7 +292,6 @@ var i:integer;
 
 
 procedure move(var player:Tplayer;var background:TabBackground;up,right,left:boolean;top:integer;var speedx:integer);
-var speedy,i:integer;
 begin 
     if (up = True)then
     begin
