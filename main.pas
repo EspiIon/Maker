@@ -2,9 +2,9 @@ program main;
 
 uses SDL2, SDL2_image;
 
-
 const taille = 3;
-
+const taillex = 40;
+const tailley=6;
 type Tbackground =
     record
     destRect:TSDL_Rect;
@@ -125,12 +125,12 @@ begin
         end;
 end;
 
-procedure Generation(var niveau:TabBloc;player:Tplayer;background:TabBackground;taille:integer);
+procedure Generation(var niveau:TabBloc;player:Tplayer;background:TabBackground;taillex,tailley:integer);
 var i,k:integer;
 // var r:integer;
 // begin
 //     randomize();
-//     setlength(niveau,taille,6);
+//     setlength(niveau,taillex,6);
 //     for i:= 0 to taille-1 do
 //         begin
 //         for k:=0 to 5 do   
@@ -149,8 +149,8 @@ var i,k:integer;
 //             end;
 //         end;
 begin
-setlength(niveau,taille,6);
-    for i:= 0 to taille-1 do
+setlength(niveau,taillex,tailley);
+    for i:= 0 to taillex-1 do
         begin
         k:=0;
             niveau[i][k].bloc:=True;
@@ -249,7 +249,6 @@ begin
 end;
 function HitboxExtended(player:Tplayer;background:TabBackground;var niveau:TabBloc;taille:integer):boolean;
 var i,k:integer;
-
 begin
     HitboxExtended:=false;
     player.destRect.h:=player.destRect.h +1;
@@ -291,7 +290,8 @@ var i:integer;
 
 
 
-procedure move(var player:Tplayer;var background:TabBackground;up,right,left:boolean;top:integer;var speedx:integer);
+procedure move(var player:Tplayer;var background:TabBackground;var niveau:TabBloc;up,right,left:boolean;top,taillex,tailley:integer;var speedx:integer);
+var i,k:integer;
 begin 
     if (up = True)then
     begin
@@ -300,7 +300,7 @@ begin
     end;
     if (right = True) then
         begin
-         if speedx < 5 then
+        if speedx < 5 then
             speedx:= speedx+1;
         end
     else if (left = True)  then
@@ -310,7 +310,20 @@ begin
     end
     else
         speedx:=0;
-player.destRect.x := player.destRect.x+(speedx);
+
+if ((player.destRect.x = 600) and right) or ((player.destRect.x = 0) and left) then
+    begin
+        for i:=0 to taillex-1 do
+            begin
+                for k:=0 to tailley do
+                    begin
+                        if niveau[i][k].bloc then
+                            niveau[i][k].destRect.x := niveau[i][k].destRect.x-speedx;
+                    end;
+            end;
+    end
+    else
+        player.destRect.x := player.destRect.x+(speedx);
 
 end;
 
@@ -340,21 +353,24 @@ begin
     sdlRenderer := SDL_CreateRenderer(sdlWindow1, -1, 0);
     defBackground(background,sdlRenderer,3);
     defplayer(player,sdlRenderer);
-    Generation(niveau,player,background,50);
+    Generation(niveau,player,background,taillex,tailley);
     quit := false;
 
     //boucle principale
     while not quit do
     begin
+        if player.destRect.x >600 then
+            player.destRect.x:= 600;
+
         if player.destRect.y < absoluteTop then
             up:=False;
         highness(player,up,down,touchfloor);
-        move(player,background,up,right,left,top,speedx);
+        move(player,background,niveau,up,right,left,top,taillex,tailley,speedx);
         Gravity(player,up,down,touchbottom,FloorLevel,top,speedy);
         GoodPosition(player,background);
-        affichage(player,background,niveau,50,sdlrenderer);
+        affichage(player,background,niveau,taillex,sdlrenderer);
         keyinteraction(up, down, right, left);
-        Hitbox(player,background, niveau,50,speedx,speedy,up,down,touchfloor,touchbottom);
+        Hitbox(player,background, niveau,taillex,speedx,speedy,up,down,touchfloor,touchbottom);
         sdl_delay(10);
 
     end;
