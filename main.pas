@@ -39,14 +39,21 @@ var
     sdlRenderer:PSDL_Renderer;
     player:Tplayer;
     background:TabBackground;
+    background2:Tbackground;
     left,right,up,down,touchfloor,touchbottom:boolean;
     niveau:TabBloc;
     quit:boolean;
 
 
-procedure defBackground(var background:TabBackground;sdlRenderer:PSDL_Renderer;taille:integer);
+procedure defBackground(var background:TabBackground;var background2:Tbackground;sdlRenderer:PSDL_Renderer;taille:integer);
 var i:integer;
 begin
+    background2.surface:= IMG_Load('./assets/background2.png');
+    background2.texture:=SDL_CreateTextureFromSurface(sdlRenderer,background2.surface);
+    background2.destRect.x:=0;
+    background2.destRect.y:=0;
+    background2.destRect.w:=900;
+    background2.destRect.h:=500;
 for i:=1 to taille do
         begin
         background[i].surface:= IMG_Load('./assets/background.png');
@@ -106,7 +113,7 @@ while SDL_PollEvent(@event) <> 0 do
 end;
 procedure defplayer(var player:Tplayer;var sdlRenderer:PSDL_Renderer);
 begin
-    player.surface := IMG_Load('./assets/mario.png');
+    player.surface := IMG_Load('./assets/player.png');
     player.texture:= SDL_CreateTextureFromSurface(sdlRenderer,player.surface);
     player.destRect.x:=20;
     player.destRect.y:=400;
@@ -154,7 +161,7 @@ setlength(niveau,taillex,tailley);
         begin
         k:=0;
             niveau[i][k].bloc:=True;
-            niveau[i][k].surface:= IMG_Load('./assets/terre.jpg');
+            niveau[i][k].surface:= IMG_Load('./assets/terre.png');
             niveau[i][k].texture:= SDL_CreateTextureFromSurface(sdlRenderer,niveau[i][k].surface);
             niveau[i][k].destRect.x:=0+40*(i);
             niveau[i][k].destRect.y:=450-40*k;
@@ -162,10 +169,10 @@ setlength(niveau,taillex,tailley);
             niveau[i][k].destRect.h:=40;
             for k:=1 to 5 do 
                     begin
-                    if ((i>7) and (k<2)) or ((i>7)and (i<22) and (k>4))  then
+                    if ((i>7) and (k<2)) or ((i>7)and (i>15) and (k=4))  then
                     begin
                         niveau[i][k].bloc:=True;
-                        niveau[i][k].surface:= IMG_Load('./assets/terre.jpg');
+                        niveau[i][k].surface:= IMG_Load('./assets/terre.png');
                         niveau[i][k].texture:= SDL_CreateTextureFromSurface(sdlRenderer,niveau[i][k].surface);
                         niveau[i][k].destRect.x:=0+40*(i);
                         niveau[i][k].destRect.y:=450-40*k;
@@ -175,10 +182,12 @@ setlength(niveau,taillex,tailley);
                     end;
         end;
 end;
-procedure affichage(player:Tplayer;background:TabBackground;niveau:TabBloc;taille:integer;sdlrenderer:PSDL_Renderer);
+procedure affichage(player:Tplayer;background:TabBackground;background2:Tbackground;niveau:TabBloc;taille:integer;sdlrenderer:PSDL_Renderer);
 var i,k:integer;
 begin
         SDL_RenderClear(sdlRenderer);
+        SDL_RenderCopy(sdlrenderer,background2.texture,nil,@background2.destRect);
+
         for i:=1 to 3 do
             begin
             SDL_RenderCopy(sdlRenderer,background[i].texture,nil, @background[i].destRect);
@@ -349,9 +358,9 @@ end;
 
 begin
     FloorLevel:=400;
-    sdlWindow1 := SDL_CreateWindow('window1',50,50,1280,720, SDL_WINDOW_SHOWN);
+    sdlWindow1 := SDL_CreateWindow('window1',50,50,900,500, SDL_WINDOW_SHOWN);
     sdlRenderer := SDL_CreateRenderer(sdlWindow1, -1, 0);
-    defBackground(background,sdlRenderer,3);
+    defBackground(background,background2,sdlRenderer,3);
     defplayer(player,sdlRenderer);
     Generation(niveau,player,background,taillex,tailley);
     quit := false;
@@ -368,7 +377,7 @@ begin
         move(player,background,niveau,up,right,left,top,taillex,tailley,speedx);
         Gravity(player,up,down,touchbottom,FloorLevel,top,speedy);
         GoodPosition(player,background);
-        affichage(player,background,niveau,taillex,sdlrenderer);
+        affichage(player,background,background2,niveau,taillex,sdlrenderer);
         keyinteraction(up, down, right, left);
         Hitbox(player,background, niveau,taillex,speedx,speedy,up,down,touchfloor,touchbottom);
         sdl_delay(10);
