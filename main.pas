@@ -307,22 +307,22 @@ begin
                     leftbloc.y:=niveau.lniveau[l][i][k].destRect.y;
                     leftbloc.x:=niveau.lniveau[l][i][k].destRect.x;
                     leftbloc.h:=niveau.lniveau[l][i][k].destRect.h;
-                    leftbloc.w:=2;
+                    leftbloc.w:=1;
 
                     rightbloc.y:=niveau.lniveau[l][i][k].destRect.y;
                     rightbloc.x:=niveau.lniveau[l][i][k].destRect.x+niveau.lniveau[l][i][k].destRect.w;
                     rightbloc.h:=niveau.lniveau[l][i][k].destRect.h;
-                    rightbloc.w:=2;
+                    rightbloc.w:=1;
 
-                    bottombloc.y:=niveau.lniveau[l][i][k].destRect.y+niveau.lniveau[l][i][k].destRect.h+5;
+                    bottombloc.y:=niveau.lniveau[l][i][k].destRect.y+niveau.lniveau[l][i][k].destRect.h;
                     bottombloc.x:=niveau.lniveau[l][i][k].destRect.x;
                     bottombloc.h:=1;
                     bottombloc.w:=niveau.lniveau[l][i][k].destRect.w;
 
                     topbloc.y:=niveau.lniveau[l][i][k].destRect.y-1;
-                    topbloc.x:=niveau.lniveau[l][i][k].destRect.x;
+                    topbloc.x:=niveau.lniveau[l][i][k].destRect.x+5;
                     topbloc.h:=1;
-                    topbloc.w:=niveau.lniveau[l][i][k].destRect.w;
+                    topbloc.w:=niveau.lniveau[l][i][k].destRect.w-20;
 
                     if SDL_HasIntersection(@player.destRect,@bottombloc) then
                         begin
@@ -463,7 +463,7 @@ begin
     niveau.tailley:=5;
     enemies.taille:=2;
     FloorLevel:=400;
-    sdlWindow1:=SDL_CreateWindow('window1',50,50,900,500, SDL_WINDOW_SHOWN);
+    sdlWindow1:=SDL_CreateWindow('window1',450,150,900,500, SDL_WINDOW_SHOWN);
     sdlRenderer:=SDL_CreateRenderer(sdlWindow1, -1, 0);
     defBackground(background,background2,sdlRenderer,3);
     defplayer(player,sdlRenderer);
