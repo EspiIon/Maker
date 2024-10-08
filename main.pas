@@ -254,8 +254,7 @@ begin
 
     for l:=1 to 3 do
             begin
-            writeln(niveau.lniveau[l][0][0].destRect.x);
-                if niveau.lniveau[l][0][0].destRect.x <= -900 then
+                if niveau.lniveau[l][0][0].destRect.x <= -950 then
                     begin
                         s:=0;
                         ry:=0; 
@@ -267,7 +266,7 @@ begin
                                         for k:=0 to 4 do 
                                             begin
                                                 niveau.lniveau[l][i+s*5][k]:=pattern[r][i][k];
-                                                niveau.lniveau[l][i+s*5][k].destRect.x:=(i+s*5)*40+900+1;
+                                                niveau.lniveau[l][i+s*5][k].destRect.x:=(i+s*5)*40+1900+1;
                                             end;
                                     end;
                                 s:=s+1;
