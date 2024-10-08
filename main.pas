@@ -4,7 +4,6 @@ uses SDL2, SDL2_image;
 
 const taille = 3;
 
-
 type Tenemy=
     record
         surface:PSDL_Surface;
@@ -90,7 +89,6 @@ for i:=1 to taille do
         background[i].destRect.h:=500;
         end;
 end;
-
 procedure PositionEnemies(player:tplayer;var enemies:Tenemies;var niveau:Tniveau);
 var i:integer;
 begin
@@ -99,7 +97,6 @@ for i:=0 to 1 do
         enemies.lEnemies[i].destRect.x:=enemies.lEnemies[i].destRect.x-player.speedx;
     end;
 end;
-
 procedure keyinteraction(var player:Tplayer);
 var event:TSDL_Event;
 begin
@@ -156,7 +153,6 @@ begin
     player.destRect.w:=50;
     player.destRect.h:=50;
 end;
-
 procedure highness(var player:Tplayer);
 begin
  if (not player.down) and (not player.up) and player.touchfloor then
@@ -177,7 +173,7 @@ begin
                 begin
                     for k:=0 to 4  do
                         begin
-                            if (i<(n+1)) and (k=0) then
+                            if (n=1) and (i<4) and (k=0) then
                                 begin
                                     pattern[n][i][k].bloc:=True;
                                     pattern[n][i][k].surface:= IMG_Load('./assets/terre.png');
@@ -186,6 +182,24 @@ begin
                                     pattern[n][i][k].destRect.w:=40;
                                     pattern[n][i][k].destRect.h:=40;
                                 end;
+                             if (n=2) and (((i >= 3) and (k=0)) or (k =3))then
+                                begin
+                                    pattern[n][i][k].bloc:=True;
+                                    pattern[n][i][k].surface:= IMG_Load('./assets/terre.png');
+                                    pattern[n][i][k].texture:= SDL_CreateTextureFromSurface(sdlRenderer,pattern[n][i][k].surface);
+                                    pattern[n][i][k].destRect.y:=450-40*k;
+                                    pattern[n][i][k].destRect.w:=40;
+                                    pattern[n][i][k].destRect.h:=40;
+                                end;
+                            if (n=3) and (k <= i) then
+                                begin
+                                    pattern[n][i][k].bloc:=True;
+                                    pattern[n][i][k].surface:= IMG_Load('./assets/terre.png');
+                                    pattern[n][i][k].texture:= SDL_CreateTextureFromSurface(sdlRenderer,pattern[n][i][k].surface);
+                                    pattern[n][i][k].destRect.y:=450-40*k;
+                                    pattern[n][i][k].destRect.w:=40;
+                                    pattern[n][i][k].destRect.h:=40;   
+                                end; 
                         end;
                 end;
         end;
@@ -232,13 +246,12 @@ begin
                         end;
     end;
 end;
-
 procedure proceduralGen(var niveau:Tniveau;pattern:TabPattern;player:Tplayer);
 var s,i,k,l,ry,rx,r:integer;
 begin
     for l:=1 to 3 do
             begin
-                if niveau.lniveau[l][0][0].destRect.x <= -900 then
+                if niveau.lniveau[l][0][0].destRect.x <= -950 then
                     begin
                         s:=0;
                         ry:=0; 
@@ -250,7 +263,7 @@ begin
                                         for k:=0 to 4 do 
                                             begin
                                                 niveau.lniveau[l][i+s*5][k]:=pattern[r][i][k];
-                                                niveau.lniveau[l][i+s*5][k].destRect.x:=(i+s*5)*40+1800+1;
+                                                niveau.lniveau[l][i+s*5][k].destRect.x:=(i+s*5)*40+1900+1;
                                             end;
                                     end;
                                 s:=s+1;
@@ -348,30 +361,6 @@ begin
         end;
     end;
 end;
-function HitboxExtended(var player:Tplayer;background:TabBackground;var niveau:Tniveau):boolean;
-var i,k,l:integer;
-begin
-    HitboxExtended:=false;
-    player.destRect.h:=player.destRect.h +1;
-    for l:=1 to 3 do
-    begin
-        for i:=0 to (niveau.taillex-1) do
-        begin
-            for k:=0 to 5 do
-            begin
-                if niveau.lniveau[l][i][k].bloc = True then
-                begin
-                    if SDL_HasIntersection(@player.destRect,@niveau.lniveau[l][i][k].destRect) then
-                        begin
-                            HitboxExtended:=True;
-                        end
-                        else
-                            HitboxExtended:=HitboxExtended;
-                end;
-            end;
-        end;
-    end;
-end;
 procedure GoodPosition(var player:Tplayer;var background:TabBackground);
 var i:integer;
     begin
@@ -436,7 +425,6 @@ if ((player.destRect.x = 450) and player.right) or ((player.destRect.x = 0) and 
         player.destRect.x := player.destRect.x+(player.speedx);
         end;
 end;
-
 procedure Gravity(var player:Tplayer;level:integer;var top,speedy:integer);
 begin
     if (player.destRect.y <= top) or (player.destRect.y < absoluteTop) or player.touchbottom or ((not player.touchfloor) and (not player.up))  then
@@ -478,6 +466,7 @@ begin
 
         if player.destRect.y < absoluteTop then
             player.up:=False;
+
         highness(player);
         move(player,background,enemies,niveau,top);
         Gravity(player,FloorLevel,top,speedy);
