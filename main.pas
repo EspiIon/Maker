@@ -53,7 +53,7 @@ type Tplayer =
     distance:real;
     surface:PSDL_Surface;
     texture:PSDL_Texture;
-    left,right,up,down,touchfloor,touchbottom:boolean;
+    left,right,up,down,touchfloor,touchbottom,death:boolean;
     end;
 
 var 
@@ -152,6 +152,7 @@ begin
     player.destRect.y:=400;
     player.destRect.w:=50;
     player.destRect.h:=50;
+    player.life:=20;
 end;
 procedure highness(var player:Tplayer);
 begin
@@ -221,8 +222,17 @@ begin
                         begin
                             for k:=0 to 4 do
                                 begin
-                                    niveau.lniveau[l][i+s*5][k]:=pattern[r][i][k];
-                                    niveau.lniveau[l][i+s*5][k].destRect.x:=(i+s*5)*(40)+(l-1)*900;
+                                    if (l=1) and (s=0) then
+                                        begin
+                                            
+                                            niveau.lniveau[l][i+s*5][k]:=pattern[1][i][k];
+                                            niveau.lniveau[l][i+s*5][k].destRect.x:=(i+s*5)*(40)+(l-1)*900+1;
+                                        end
+                                        else
+                                            begin
+                                                niveau.lniveau[l][i+s*5][k]:=pattern[r][i][k];
+                                                niveau.lniveau[l][i+s*5][k].destRect.x:=(i+s*5)*(40)+(l-1)*900+1;
+                                            end;
                                 end;
                         end;
                     s:=s+1;
@@ -250,11 +260,9 @@ procedure proceduralGen(var niveau:Tniveau;pattern:TabPattern;player:Tplayer);
 var s,i,k,l,ry,rx,r:integer;
 begin
     randomize();
-    writeln('ok');  
-
     for l:=1 to 3 do
             begin
-                if niveau.lniveau[l][0][0].destRect.x <= -950 then
+                if niveau.lniveau[l][0][0].destRect.x <= -1000 then
                     begin
                         s:=0;
                         ry:=0; 
@@ -266,7 +274,7 @@ begin
                                         for k:=0 to 4 do 
                                             begin
                                                 niveau.lniveau[l][i+s*5][k]:=pattern[r][i][k];
-                                                niveau.lniveau[l][i+s*5][k].destRect.x:=(i+s*5)*40+1900+1;
+                                                niveau.lniveau[l][i+s*5][k].destRect.x:=(i+s*5)*40+2000+1;
                                             end;
                                     end;
                                 s:=s+1;
@@ -382,9 +390,6 @@ var i:integer;
             end;
         end;
     end;
-
-
-
 procedure move(var player:Tplayer;var background:TabBackground;var enemies:Tenemies;var niveau:Tniveau;top:integer);
 var i,k,l:integer;
 begin 
@@ -446,20 +451,40 @@ begin
         player.destRect.y:= player.destRect.y + speedy;
         end;
 end;
-
+procedure starting(var niveau:Tniveau;var pattern:TabPattern;var player:Tplayer;var enemies:Tenemies;var background:TabBackground;var background2:Tbackground);
 begin
     randomize();
+    player.death:=False;
     niveau.taillex:=25;
     niveau.tailley:=5;
     enemies.taille:=2;
     FloorLevel:=400;
-    sdlWindow1:=SDL_CreateWindow('window1',450,150,900,500, SDL_WINDOW_SHOWN);
-    sdlRenderer:=SDL_CreateRenderer(sdlWindow1, -1, 0);
     defBackground(background,background2,sdlRenderer,3);
     defplayer(player,sdlRenderer);
     declarationPattern(pattern);
     Generation(niveau,pattern,player,enemies,background);
     quit := false;
+end;
+procedure death(var player:Tplayer);
+var death:boolean;
+begin
+    if player.destRect.y > 600 then
+        begin
+        player.death:=True;   
+        end;
+    if player.life <= 0 then
+        begin
+        player.death:=True;
+        end;
+    if player.death then
+        begin
+        starting(niveau,pattern,player,enemies,background,background2);
+        end;
+end;
+begin
+    sdlWindow1:=SDL_CreateWindow('window1',450,150,900,500, SDL_WINDOW_SHOWN);
+    sdlRenderer:=SDL_CreateRenderer(sdlWindow1, -1, 0);
+    starting(niveau,pattern,player,enemies,background,background2);
     //boucle principale
     while not quit do
     begin
@@ -468,7 +493,7 @@ begin
 
         if player.destRect.y < absoluteTop then
             player.up:=False;
-
+        death(player);
         highness(player);
         move(player,background,enemies,niveau,top);
         Gravity(player,FloorLevel,top,speedy);
