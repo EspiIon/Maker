@@ -1,8 +1,8 @@
 unit mouvement;
 
-uses structure;
 
 interface
+uses structure,SDL2,SDL2_image;
 procedure move(var player:Tplayer;var background:TabBackground;var enemies:Tenemies;var niveau:Tniveau;top:integer);
 procedure PositionEnemies(player:tplayer;var enemies:Tenemies;var niveau:Tniveau);
 procedure Gravity(var player:Tplayer;level:integer;var top,speedy:integer);
@@ -63,7 +63,7 @@ for i:=0 to 1 do
 end;
 procedure Gravity(var player:Tplayer;level:integer;var top,speedy:integer);
 begin
-    if (player.destRect.y <= top) or (player.destRect.y < absoluteTop) or player.touchbottom or ((not player.touchfloor) and (not player.up))  then
+    if (player.destRect.y <= top) or (player.destRect.y < player.absoluteTop) or player.touchbottom or ((not player.touchfloor) and (not player.up))  then
     begin
         player.down:=True;
         player.up:=False;
@@ -72,7 +72,7 @@ begin
     if player.touchfloor then
         begin
             player.down:=False;
-            top:=absoluteTop;
+            top:=player.absoluteTop;
         end;
     if player.down then
         begin
@@ -156,3 +156,5 @@ var i:integer;
             end;
         end;
     end;
+begin
+end.

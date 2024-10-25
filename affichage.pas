@@ -1,11 +1,12 @@
 unit affichage;
 
-uses structure
 
 interface
+uses structure,SDL2,SDL2_image;
+
 procedure defBackground(var background:TabBackground;var background2:Tbackground;sdlRenderer:PSDL_Renderer;taille:integer);
 procedure defplayer(var player:Tplayer;var sdlRenderer:PSDL_Renderer);
-procedure affichage(player:Tplayer;enemies:Tenemies;background:TabBackground;background2:Tbackground;niveau:Tniveau;sdlrenderer:PSDL_Renderer);
+procedure display(player:Tplayer;enemies:Tenemies;background:TabBackground;background2:Tbackground;niveau:Tniveau;sdlrenderer:PSDL_Renderer);
 
 
 implementation
@@ -40,7 +41,7 @@ begin
     player.life:=20;
 end;
 
-procedure affichage(player:Tplayer;enemies:Tenemies;background:TabBackground;background2:Tbackground;niveau:Tniveau;sdlrenderer:PSDL_Renderer);
+procedure display(player:Tplayer;enemies:Tenemies;background:TabBackground;background2:Tbackground;niveau:Tniveau;sdlrenderer:PSDL_Renderer);
 var i,k,l:integer;
 begin
         SDL_RenderClear(sdlRenderer);
@@ -66,3 +67,5 @@ begin
         SDL_RenderCopy(sdlrenderer,player.texture,nil,@player.destRect);
         SDL_RenderPresent(sdlRenderer);
 end;
+begin
+end.

@@ -38,7 +38,7 @@ while SDL_PollEvent(@event) <> 0 do
                 if (event.key.keysym.sym = SDLK_SPACE) and not player.down then
                     begin
                         if not player.up then
-                            absoluteTop:= player.destRect.y -150;
+                            player.absoluteTop:= player.destRect.y -150;
                         player.up:=True;
                     end;
             end;
@@ -201,8 +201,6 @@ begin
             end;
 end;
 
-
-
 procedure starting(var niveau:Tniveau;var pattern:TabPattern;var player:Tplayer;var enemies:Tenemies;var background:TabBackground;var background2:Tbackground);
 begin
     randomize();
@@ -243,14 +241,14 @@ begin
         if player.destRect.x >450 then
             player.destRect.x:= 450;
 
-        if player.destRect.y < absoluteTop then
+        if player.destRect.y < player.absoluteTop then
             player.up:=False;
         death(player);
         highness(player);
         move(player,background,enemies,niveau,top);
         Gravity(player,FloorLevel,top,speedy);
         GoodPosition(player,background);
-        affichage(player,enemies,background,background2,niveau,sdlrenderer);
+        display(player,enemies,background,background2,niveau,sdlrenderer);
         keyinteraction(player);
         Hitbox(player,background,niveau);
         proceduralGen(niveau,pattern,player);

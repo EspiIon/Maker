@@ -47,7 +47,7 @@ type TabPattern = array[1..5] of TabBloc;
 type Tplayer =
     record
     destRect:TSDL_Rect;
-    life,speedx,speedy:integer;
+    life,speedx,speedy,absoluteTop:integer;
     distance:real;
     surface:PSDL_Surface;
     texture:PSDL_Texture;
